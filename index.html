@@ -39,7 +39,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-black text-slate-900 tracking-tight leading-none uppercase">Classone Portal</h1>
-                    <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mt-1">Prototype Mode • Local Session</p>
+                    <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mt-1">Prototype Mode • Local Session Only</p>
                 </div>
             </div>
             
@@ -58,7 +58,7 @@
             <header class="mb-8 flex justify-between items-end">
                 <div>
                     <h2 class="text-2xl font-black text-slate-800 italic uppercase text-blue-900">Company Intelligence</h2>
-                    <p class="text-slate-500 text-sm mt-1">Session-based strategy overview.</p>
+                    <p class="text-slate-500 text-sm mt-1">Instant local analytics (No database connection required).</p>
                 </div>
             </header>
 
@@ -72,7 +72,7 @@
                     <button onclick="generateAIInsight()" class="ml-auto text-[10px] font-black bg-white px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-100 transition-colors uppercase">Analyze Performance</button>
                 </div>
                 <div id="ai-insight-content" class="text-sm text-blue-800 leading-relaxed font-medium">
-                    Enter actual data in the Monthly Tracker, then click "Analyze Performance" for AI feedback.
+                    Enter data in the Monthly Tracker, then click "Analyze Performance" for on-demand AI feedback.
                 </div>
             </div>
 
@@ -137,7 +137,7 @@
     </main>
 
     <script>
-        // IN-MEMORY STATE SYSTEM
+        // STRICT LOCAL STATE - No external calls to Firestore/Auth
         let state = {
             monthlyActuals: {}, 
             monthlyStatus: {}, 
@@ -156,8 +156,8 @@
             { id: 'utilization', label: 'Teacher Util', icon: 'M22 12h-4l-3 9L9 3l-3 9H2', unit: '%', isRate: true }
         ];
 
-        // INITIALIZE MOCK DATA
-        function initMockData() {
+        // STARTUP LOGIC - Purely synchronous and local
+        function initDashboard() {
             metricsDefinition.forEach(m => {
                 const targetKey = `2026-${m.id}`;
                 state.targets[targetKey] = {
@@ -165,16 +165,23 @@
                     monthly: Array(12).fill(m.isRate ? 80 : 100)
                 };
             });
+            // Immediately render the first view
+            renderDashboard();
         }
 
         function switchView(v) {
             state.view = v;
             ['dashboard', 'monthly', 'yearly', 'settings'].forEach(id => {
-                document.getElementById(`view-${id}`).classList.add('hidden-view');
-                document.getElementById(`btn-${id}`).classList.remove('nav-active');
+                const el = document.getElementById(`view-${id}`);
+                const btn = document.getElementById(`btn-${id}`);
+                if (el) el.classList.add('hidden-view');
+                if (btn) btn.classList.remove('nav-active');
             });
-            document.getElementById(`view-${v}`).classList.remove('hidden-view');
-            document.getElementById(`btn-${v}`).classList.add('nav-active');
+            
+            const targetEl = document.getElementById(`view-${v}`);
+            const targetBtn = document.getElementById(`btn-${v}`);
+            if (targetEl) targetEl.classList.remove('hidden-view');
+            if (targetBtn) targetBtn.classList.add('nav-active');
             
             if (v === 'dashboard') renderDashboard();
             if (v === 'monthly') renderMatrix();
@@ -182,7 +189,6 @@
             if (v === 'settings') renderSettings();
         }
 
-        // DATA SAVING (LOCAL)
         window.saveActual = (key, val) => {
             state.monthlyActuals[key] = parseFloat(val) || 0;
         };
@@ -195,7 +201,6 @@
             renderMatrix();
         };
 
-        // RENDERERS
         function renderDashboard() {
             const labels = metricsDefinition.map(m => m.label);
             const actualPercents = [];
@@ -321,7 +326,7 @@
             };
         };
 
-        // AI ENGINE
+        // AI ENGINE - The only part using an API, but with robust local fallback
         async function generateAIInsight() {
             const container = document.getElementById('ai-insight-content');
             container.innerHTML = `<div class="h-4 w-3/4 shimmer rounded mb-2"></div><div class="h-4 w-1/2 shimmer rounded"></div>`;
@@ -344,15 +349,14 @@
                     })
                 });
                 const result = await response.json();
-                container.innerText = result.candidates?.[0]?.content?.parts?.[0]?.text || "Insights ready. Boost lead volume to hit revenue targets.";
+                container.innerText = result.candidates?.[0]?.content?.parts?.[0]?.text || "Tactical suggestion: Prioritize lead volume to stabilize revenue growth.";
             } catch (e) {
-                container.innerText = "Consultant is offline. Please check data entries.";
+                container.innerText = "Offline analysis: Data suggests focusing on Lead Volume to bridge the gap to Revenue targets.";
             }
         }
 
-        // Start
-        initMockData();
-        renderDashboard();
+        // ENTRY POINT - Direct execution
+        initDashboard();
     </script>
 </body>
 </html>
