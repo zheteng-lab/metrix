@@ -30,7 +30,6 @@
         }
         .chart-container { position: relative; height: 300px; width: 100%; }
         
-        /* Shimmer effect for AI Loading */
         .shimmer {
             background: linear-gradient(90deg, #eff6ff 25%, #dbeafe 50%, #eff6ff 75%);
             background-size: 200% 100%;
@@ -57,7 +56,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-black text-slate-900 tracking-tight leading-none uppercase">Classone Portal</h1>
-                    <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mt-1">Strategic Management System • <span id="user-id-display">Live Mode</span></p>
+                    <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mt-1">Strategic Management System • <span id="user-id-display">Initializing...</span></p>
                 </div>
             </div>
             
@@ -90,10 +89,10 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
                     </div>
                     <h3 class="text-sm font-black uppercase text-blue-900 tracking-wider">AI Strategy Consultant</h3>
-                    <button onclick="window.generateAIInsight()" class="ml-auto text-[10px] font-black bg-white px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-100 transition-colors uppercase">Refresh Analysis</button>
+                    <button id="ai-refresh-btn" onclick="window.generateAIInsight()" class="ml-auto text-[10px] font-black bg-white px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-100 transition-colors uppercase">Refresh Analysis</button>
                 </div>
                 <div id="ai-insight-content" class="text-sm text-blue-800 leading-relaxed font-medium">
-                    Click "Refresh Analysis" to generate strategic recommendations based on your current performance data.
+                    Enter some data in the Monthly Tracker, then click "Refresh Analysis" for strategic recommendations.
                 </div>
             </div>
 
@@ -116,35 +115,34 @@
             </div>
         </div>
         
-        <!-- Monthly Tracker View -->
+        <!-- Other Views -->
         <div id="view-monthly" class="hidden-view">
              <header class="mb-8">
                 <h2 class="text-2xl font-black text-slate-800 italic uppercase text-blue-900">Monthly Execution</h2>
                 <div class="flex items-center gap-3 mt-4 bg-white border border-slate-200 px-4 py-2 rounded-xl shadow-sm w-fit">
-                    <select id="month-selector" class="font-bold text-blue-600 text-sm focus:ring-0 border-none bg-transparent outline-none cursor-pointer">
+                    <select id="month-selector" onchange="window.refreshUI()" class="font-bold text-blue-600 text-sm border-none bg-transparent outline-none cursor-pointer">
                         <option value="0">January</option><option value="1">February</option><option value="2">March</option>
                         <option value="3">April</option><option value="4" selected>May</option><option value="5">June</option>
                         <option value="6">July</option><option value="7">August</option><option value="8">September</option>
                         <option value="9">October</option><option value="10">November</option><option value="11">December</option>
                     </select>
                     <div class="w-px h-4 bg-slate-200"></div>
-                    <input type="number" id="year-selector" value="2026" class="w-20 font-bold text-blue-600 text-sm border-none bg-transparent outline-none">
+                    <input type="number" id="year-selector" value="2026" onchange="window.refreshUI()" class="w-20 font-bold text-blue-600 text-sm border-none bg-transparent outline-none">
                 </div>
             </header>
             <div id="matrix-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
         </div>
 
-        <!-- Yearly Strategy View -->
         <div id="view-yearly" class="hidden-view">
             <h2 class="text-2xl font-black text-slate-800 italic uppercase mb-8">Yearly Strategy</h2>
             <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                 <table class="w-full text-left">
                     <thead class="bg-slate-50 border-b border-slate-100">
                         <tr>
-                            <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Metric</th>
-                            <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Target</th>
-                            <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Actual YTD</th>
-                            <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Pace</th>
+                            <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Metric</th>
+                            <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Target</th>
+                            <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Actual YTD</th>
+                            <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Pace</th>
                         </tr>
                     </thead>
                     <tbody id="comparison-table-body" class="divide-y divide-slate-50"></tbody>
@@ -152,12 +150,11 @@
             </div>
         </div>
 
-        <!-- Target Settings View -->
         <div id="view-settings" class="hidden-view">
             <h2 class="text-2xl font-black text-slate-800 italic uppercase mb-8">Target Portal</h2>
             <div class="flex items-center gap-2 mb-8 bg-white p-4 border border-slate-200 rounded-2xl w-fit">
                 <span class="text-[10px] font-black text-slate-400 uppercase">Year:</span>
-                <input type="number" id="settings-year-selector" value="2026" class="w-20 font-bold text-blue-600 border-none outline-none">
+                <input type="number" id="settings-year-selector" value="2026" onchange="window.refreshUI()" class="w-20 font-bold text-blue-600 border-none outline-none">
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="settings-container"></div>
         </div>
@@ -168,64 +165,76 @@
         import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // APP CONFIG & INITIALIZATION
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
-            apiKey: "", authDomain: "", projectId: "", storageBucket: "", messagingSenderId: "", appId: ""
-        };
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'classone-dashboard';
-        const apiKey = ""; // Gemini API key provided by environment
+        // CONFIG & STATE
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'classone-dashboard-v1';
+        const apiKey = ""; // API key provided by system
 
-        const metricsDefinition = [
-            { id: 'lead_vol', label: 'Lead Volume', icon: 'm3 3 3 9-3 9 19-9Z', unit: 'Leads', isRate: false },
-            { id: 'revenue', label: 'Revenue Achievement', icon: 'M12 1v22 M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6', unit: 'RM', isRate: false },
-            { id: 'trial_conv', label: 'Trial Conversion', icon: 'M22 7L13.5 15.5 8.5 10.5 2 17', unit: '%', isRate: true },
-            { id: 'enrollment', label: 'New Enrollments', icon: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 1 0-8 4 4 0 0 1 0 8', unit: 'Students', isRate: false },
-            { id: 'churn', label: 'Student Churn', icon: 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0', unit: 'Students', isRate: false },
-            { id: 'utilization', label: 'Teacher Utilization', icon: 'M22 12h-4l-3 9L9 3l-3 9H2', unit: '%', isRate: true },
-            { id: 'mf_cont', label: 'MF Count', icon: 'M12 12a10 10 0 1 0 0 20 10 10 0 0 0 0-20', unit: 'Partners', isRate: false },
-            { id: 'sop', label: 'SOP Compliance', icon: 'm9 11 3 3L22 4 M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11', unit: '%', isRate: true },
-            { id: 'referral', label: 'Referral Count', icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z', unit: 'Count', isRate: false }
-        ];
-
+        let db, auth;
         let state = { monthlyActuals: {}, monthlyStatus: {}, targets: {}, user: null, view: 'dashboard' };
         let charts = { performance: null, revenue: null };
 
-        // AUTHENTICATION
-        const initAuth = async () => {
+        const metricsDefinition = [
+            { id: 'lead_vol', label: 'Lead Volume', icon: 'm3 3 3 9-3 9 19-9Z', unit: 'L', isRate: false },
+            { id: 'revenue', label: 'Revenue', icon: 'M12 1v22 M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6', unit: 'RM', isRate: false },
+            { id: 'trial_conv', label: 'Trial Conv', icon: 'M22 7L13.5 15.5 8.5 10.5 2 17', unit: '%', isRate: true },
+            { id: 'enrollment', label: 'New Students', icon: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 1 0-8 4 4 0 0 1 0 8', unit: 'S', isRate: false },
+            { id: 'churn', label: 'Churn', icon: 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0', unit: 'S', isRate: false },
+            { id: 'utilization', label: 'Teacher Util', icon: 'M22 12h-4l-3 9L9 3l-3 9H2', unit: '%', isRate: true },
+            { id: 'mf_cont', label: 'MF Count', icon: 'M12 12a10 10 0 1 0 0 20 10 10 0 0 0 0-20', unit: 'P', isRate: false },
+            { id: 'sop', label: 'SOP Compliance', icon: 'm9 11 3 3L22 4 M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11', unit: '%', isRate: true },
+            { id: 'referral', label: 'Referrals', icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z', unit: 'C', isRate: false }
+        ];
+
+        // STARTUP
+        const startApp = async () => {
+            if (!firebaseConfig) {
+                updateSyncStatus('Config Error', 'bg-red-500');
+                return;
+            }
+
+            const app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+
+            updateSyncStatus('Authenticating...', 'bg-yellow-400');
+            
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
                     await signInAnonymously(auth);
                 }
-            } catch (err) { console.error("Auth Failed", err); }
+            } catch (err) {
+                console.error("Auth failed", err);
+                updateSyncStatus('Auth Error', 'bg-red-500');
+            }
+
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    state.user = user;
+                    document.getElementById('user-id-display').innerText = `ID: ${user.uid.substring(0, 8)}`;
+                    setupListeners();
+                }
+            });
         };
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                state.user = user;
-                document.getElementById('user-id-display').innerText = `ID: ${user.uid.substring(0, 8)}`;
-                setupListeners();
-            }
-        });
-
-        // FIRESTORE LISTENERS
         const setupListeners = () => {
-            updateSyncStatus('Syncing...', 'bg-yellow-400');
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'metrics'), (snap) => {
+            updateSyncStatus('Syncing Data...', 'bg-yellow-400');
+            
+            const metricsRef = collection(db, 'artifacts', appId, 'public', 'data', 'metrics');
+            const targetsRef = collection(db, 'artifacts', appId, 'public', 'data', 'targets');
+
+            onSnapshot(metricsRef, (snap) => {
                 snap.forEach(doc => {
-                    const d = doc.data();
-                    state.monthlyActuals[doc.id] = d.actual;
-                    state.monthlyStatus[doc.id] = d.status;
+                    state.monthlyActuals[doc.id] = doc.data().actual;
+                    state.monthlyStatus[doc.id] = doc.data().status;
                 });
                 window.refreshUI();
                 updateSyncStatus('Live', 'bg-green-500');
-            }, () => updateSyncStatus('Sync Error', 'bg-red-500'));
+            }, (err) => updateSyncStatus('Firestore Error', 'bg-red-500'));
 
-            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'targets'), (snap) => {
+            onSnapshot(targetsRef, (snap) => {
                 snap.forEach(doc => { state.targets[doc.id] = doc.data(); });
                 window.refreshUI();
             });
@@ -238,16 +247,7 @@
             if (dot) dot.className = `w-2 h-2 rounded-full ${color}`;
         };
 
-        // UI CORE
-        window.refreshUI = () => {
-            const activeEl = document.activeElement;
-            const isInputFocused = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'SELECT');
-            if (state.view === 'dashboard') renderDashboard();
-            if (state.view === 'monthly') renderMatrix();
-            if (state.view === 'yearly') renderComparison();
-            if (state.view === 'settings' && !isInputFocused) loadSettingsData();
-        };
-
+        // UI ACTIONS
         window.switchView = (v) => {
             state.view = v;
             ['dashboard', 'monthly', 'yearly', 'settings'].forEach(id => {
@@ -259,31 +259,36 @@
             window.refreshUI();
         };
 
-        // DASHBOARD RENDER
+        window.refreshUI = () => {
+            if (state.view === 'dashboard') renderDashboard();
+            if (state.view === 'monthly') renderMatrix();
+            if (state.view === 'yearly') renderComparison();
+            if (state.view === 'settings') loadSettingsData();
+        };
+
         const renderDashboard = () => {
             const year = document.getElementById('dashboard-year-selector').value;
-            const targetData = []; const actualData = [];
-            let totalRevenue = 0; let totalEnrollment = 0; let convSum = 0; let monthlyRevenues = Array(12).fill(0);
+            const labels = metricsDefinition.map(m => m.label);
+            const actualPercents = [];
+            let totalRevenue = 0, totalEnrollment = 0, convSum = 0, monthlyRevenues = Array(12).fill(0);
 
-            metricsDefinition.forEach(metric => {
-                const targetKey = `${year}-${metric.id}`;
-                const t = state.targets[targetKey] || { annual: 0 };
-                let actuals = []; let validMonths = 0;
-                for(let m=0; m<12; m++) {
-                    const val = state.monthlyActuals[`${m}-${year}-${metric.id}`];
-                    if (val !== undefined) {
-                        actuals.push(parseFloat(val)); validMonths++;
-                        if (metric.id === 'revenue') monthlyRevenues[m] = parseFloat(val);
+            metricsDefinition.forEach(m => {
+                const targetKey = `${year}-${m.id}`;
+                const tVal = state.targets[targetKey]?.annual || 0;
+                let actuals = [];
+                for(let i=0; i<12; i++) {
+                    const v = state.monthlyActuals[`${i}-${year}-${m.id}`];
+                    if(v !== undefined) {
+                        actuals.push(parseFloat(v));
+                        if(m.id === 'revenue') monthlyRevenues[i] = parseFloat(v);
                     }
                 }
-                const actualVal = metric.isRate ? (validMonths > 0 ? actuals.reduce((a,b)=>a+b,0)/validMonths : 0) : actuals.reduce((a,b)=>a+b,0);
-                const targetVal = parseFloat(t.annual) || 0;
-                actualData.push(targetVal > 0 ? (actualVal / targetVal) * 100 : 0);
-                targetData.push(100);
+                const actualVal = m.isRate ? (actuals.length ? actuals.reduce((a,b)=>a+b,0)/actuals.length : 0) : actuals.reduce((a,b)=>a+b,0);
+                actualPercents.push(tVal > 0 ? (actualVal / tVal) * 100 : 0);
 
-                if (metric.id === 'revenue') totalRevenue = actualVal;
-                if (metric.id === 'enrollment') totalEnrollment = actualVal;
-                if (metric.id === 'trial_conv') convSum = actualVal;
+                if(m.id === 'revenue') totalRevenue = actualVal;
+                if(m.id === 'enrollment') totalEnrollment = actualVal;
+                if(m.id === 'trial_conv') convSum = actualVal;
             });
 
             document.getElementById('summary-revenue').innerText = `RM ${totalRevenue.toLocaleString()}`;
@@ -292,41 +297,34 @@
             document.getElementById('summary-efficiency').innerText = (totalRevenue / (totalEnrollment || 1)).toFixed(0);
 
             if (charts.performance) charts.performance.destroy();
-            charts.performance = new Chart(document.getElementById('performanceChart').getContext('2d'), {
+            charts.performance = new Chart(document.getElementById('performanceChart'), {
                 type: 'bar',
-                data: { labels: metricsDefinition.map(m => m.label), datasets: [
-                    { label: 'Target (%)', data: targetData, backgroundColor: '#e2e8f0', borderRadius: 6 },
-                    { label: 'Actual (%)', data: actualData, backgroundColor: '#2563eb', borderRadius: 6 }
-                ]},
+                data: { labels, datasets: [{ label: 'YTD Pace %', data: actualPercents, backgroundColor: '#2563eb', borderRadius: 4 }] },
                 options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 150 } } }
             });
 
             if (charts.revenue) charts.revenue.destroy();
-            charts.revenue = new Chart(document.getElementById('revenueTrendChart').getContext('2d'), {
+            charts.revenue = new Chart(document.getElementById('revenueTrendChart'), {
                 type: 'line',
-                data: { labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], datasets: [{
-                    data: monthlyRevenues, borderColor: '#2563eb', backgroundColor: 'rgba(37, 99, 235, 0.1)', fill: true, tension: 0.4
-                }]},
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                data: { labels: ['J','F','M','A','M','J','J','A','S','O','N','D'], datasets: [{ data: monthlyRevenues, borderColor: '#2563eb', fill: true, tension: 0.4 }] },
+                options: { responsive: true, maintainAspectRatio: false }
             });
         };
 
-        // MONTHLY TRACKER RENDER
         const renderMatrix = () => {
             const m = document.getElementById('month-selector').value;
             const y = document.getElementById('year-selector').value;
             const grid = document.getElementById('matrix-grid');
-            if (!grid) return;
             grid.innerHTML = '';
             metricsDefinition.forEach(metric => {
                 const key = `${m}-${y}-${metric.id}`;
                 const tData = state.targets[`${y}-${metric.id}`] || { annual: 0, monthly: Array(12).fill(0) };
-                const targetVal = metric.isRate ? (tData.annual || 0) : (tData.monthly[m] || 0);
+                const targetVal = metric.isRate ? tData.annual : tData.monthly[m];
                 const card = document.createElement('div');
-                card.className = "bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between h-56 transition-all hover:border-blue-300";
+                card.className = "bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between h-56";
                 card.innerHTML = `
-                    <div class="flex justify-between items-start">
-                        <div class="p-2.5 rounded-xl bg-slate-50 text-slate-400">
+                    <div class="flex justify-between">
+                        <div class="p-2 rounded-lg bg-slate-50 text-slate-400">
                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="${metric.icon}"/></svg>
                         </div>
                         <div onclick="window.toggleStatus('${key}')" class="w-6 h-6 rounded-full cursor-pointer status-${state.monthlyStatus[key] || 'green'}"></div>
@@ -336,9 +334,8 @@
                         <p class="text-xs font-bold text-blue-600 mt-1">Goal: ${targetVal}${metric.unit}</p>
                     </div>
                     <div class="mt-2 flex items-center gap-2">
-                        <input type="number" value="${state.monthlyActuals[key] || ''}" onchange="window.saveActual('${key}', this.value)" placeholder="Actual..." 
-                               class="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm font-bold text-slate-800">
-                        <span class="text-[9px] font-black text-slate-300 uppercase">${metric.unit}</span>
+                        <input type="number" value="${state.monthlyActuals[key] || ''}" onchange="window.saveActual('${key}', this.value)" placeholder="Enter Actual" 
+                               class="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm font-bold">
                     </div>
                 `;
                 grid.appendChild(card);
@@ -346,41 +343,35 @@
         };
 
         window.toggleStatus = async (key) => {
-            if (!state.user) return;
             const states = ['green', 'yellow', 'red'];
             const next = states[(states.indexOf(state.monthlyStatus[key] || 'green') + 1) % 3];
             await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'metrics', key), { status: next, actual: state.monthlyActuals[key] || 0 }, { merge: true });
         };
 
         window.saveActual = async (key, val) => {
-            if (!state.user) return;
             await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'metrics', key), { actual: parseFloat(val) || 0, status: state.monthlyStatus[key] || 'green' }, { merge: true });
         };
 
-        // TARGET SETTINGS
         const loadSettingsData = () => {
             const year = document.getElementById('settings-year-selector').value;
             const container = document.getElementById('settings-container');
-            if (!container) return; container.innerHTML = '';
+            container.innerHTML = '';
             metricsDefinition.forEach(metric => {
                 const targetKey = `${year}-${metric.id}`;
                 const data = state.targets[targetKey] || { annual: 0, monthly: Array(12).fill(0) };
                 const section = document.createElement('div');
                 section.className = "p-6 bg-slate-50 rounded-3xl border border-slate-100";
                 section.innerHTML = `
-                    <h3 class="font-black text-sm uppercase text-slate-800 mb-6 flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="${metric.icon}"/></svg>
-                        ${metric.label}
-                    </h3>
-                    <div class="bg-blue-600 p-4 rounded-2xl flex justify-between items-center mb-4">
-                        <span class="text-[10px] font-black text-blue-50 uppercase">Annual Target</span>
+                    <h3 class="font-black text-xs uppercase mb-4">${metric.label} Targets</h3>
+                    <div class="bg-blue-600 p-4 rounded-xl flex justify-between items-center mb-4">
+                        <span class="text-[10px] font-black text-blue-50 uppercase">Annual</span>
                         <input type="number" value="${data.annual || ''}" onchange="window.handleAnnualInput('${targetKey}', this.value, ${metric.isRate})" class="w-24 bg-blue-500 text-white font-black text-right border-none rounded">
                     </div>
-                    <div class="grid grid-cols-3 gap-2">
+                    <div class="grid grid-cols-4 gap-2">
                         ${data.monthly.map((val, i) => `
-                            <div class="bg-white p-2 rounded-xl text-center">
-                                <p class="text-[8px] font-black text-slate-400 uppercase">${new Date(0,i).toLocaleString('en',{month:'short'})}</p>
-                                <input type="number" value="${val}" onchange="window.handleMonthlyInput('${targetKey}', ${i}, this.value, ${metric.isRate})" class="w-full text-xs font-bold text-center border-none">
+                            <div class="bg-white p-2 rounded text-center">
+                                <p class="text-[8px] font-black text-slate-400">${new Date(0,i).toLocaleString('en',{month:'short'})}</p>
+                                <input type="number" value="${val}" onchange="window.handleMonthlyInput('${targetKey}', ${i}, this.value, ${metric.isRate})" class="w-full text-[10px] font-bold text-center border-none">
                             </div>
                         `).join('')}
                     </div>
@@ -390,63 +381,55 @@
         };
 
         window.handleAnnualInput = async (targetKey, val, isRate) => {
-            if (!state.user) return;
             const annual = parseFloat(val) || 0;
             const monthly = isRate ? Array(12).fill(annual) : Array(12).fill(parseFloat((annual/12).toFixed(1)));
             await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'targets', targetKey), { annual, monthly });
-            loadSettingsData();
         };
 
         window.handleMonthlyInput = async (targetKey, index, val, isRate) => {
-            if (!state.user) return;
             const current = state.targets[targetKey] || { annual: 0, monthly: Array(12).fill(0) };
             let updatedMonthly = [...current.monthly]; updatedMonthly[index] = parseFloat(val) || 0;
             let updatedAnnual = isRate ? updatedMonthly[index] : updatedMonthly.reduce((a, b) => a + b, 0);
             if (isRate) updatedMonthly = Array(12).fill(updatedMonthly[index]);
             await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'targets', targetKey), { annual: updatedAnnual, monthly: updatedMonthly });
-            loadSettingsData();
         };
 
-        // YEARLY COMPARISON
         const renderComparison = () => {
-            const year = document.getElementById('year-selector').value;
+            const year = "2026";
             const tbody = document.getElementById('comparison-table-body');
-            if (!tbody) return; tbody.innerHTML = '';
+            tbody.innerHTML = '';
             metricsDefinition.forEach(metric => {
                 const targetKey = `${year}-${metric.id}`;
                 const t = state.targets[targetKey] || { annual: 0 };
-                let actuals = []; for(let m=0; m<12; m++) {
+                let actuals = []; 
+                for(let m=0; m<12; m++) {
                     const v = state.monthlyActuals[`${m}-${year}-${metric.id}`];
                     if(v !== undefined) actuals.push(parseFloat(v));
                 }
                 const actualVal = metric.isRate ? (actuals.length > 0 ? actuals.reduce((a,b)=>a+b,0)/actuals.length : 0) : actuals.reduce((a,b)=>a+b,0);
                 const pace = t.annual > 0 ? ((actualVal/t.annual)*100).toFixed(1) : 0;
-                tbody.innerHTML += `<tr><td class="px-6 py-4 text-xs font-black uppercase">${metric.label}</td><td class="px-6 py-4 text-xs font-bold">${t.annual}${metric.unit}</td><td class="px-6 py-4 text-xs font-bold text-blue-600">${actualVal.toFixed(1)}${metric.unit}</td><td class="px-6 py-4 text-xs font-black">${pace}%</td></tr>`;
+                tbody.innerHTML += `<tr><td class="px-6 py-4 text-xs font-black uppercase">${metric.label}</td><td class="px-6 py-4 text-xs font-bold">${t.annual}</td><td class="px-6 py-4 text-xs font-bold text-blue-600">${actualVal.toFixed(1)}</td><td class="px-6 py-4 text-xs font-black">${pace}%</td></tr>`;
             });
         };
 
-        // GEMINI AI INTEGRATION
+        // AI STRATEGY
         window.generateAIInsight = async () => {
             const container = document.getElementById('ai-insight-content');
             container.innerHTML = `<div class="h-4 w-3/4 shimmer rounded mb-2"></div><div class="h-4 w-1/2 shimmer rounded"></div>`;
             
-            // Prepare snapshot of data for context
             const year = "2026";
-            const dataContext = metricsDefinition.map(m => {
-                const targetKey = `${year}-${m.id}`;
-                const t = state.targets[targetKey]?.annual || 0;
+            const dataCtx = metricsDefinition.map(m => {
+                const target = state.targets[`${year}-${m.id}`]?.annual || 0;
                 let actuals = [];
                 for(let i=0; i<12; i++) {
-                    const val = state.monthlyActuals[`${i}-${year}-${m.id}`];
-                    if(val) actuals.push(parseFloat(val));
+                    const v = state.monthlyActuals[`${i}-${year}-${m.id}`];
+                    if(v) actuals.push(parseFloat(v));
                 }
                 const actual = m.isRate ? (actuals.length ? actuals.reduce((a,b)=>a+b,0)/actuals.length : 0) : actuals.reduce((a,b)=>a+b,0);
-                return `${m.label}: Target ${t}, Actual ${actual.toFixed(1)}`;
+                return `${m.label}: T-${target}/A-${actual.toFixed(1)}`;
             }).join(', ');
 
-            const prompt = `As a Strategic Business Consultant for "Classone Portal", analyze this performance data: ${dataContext}. 
-                           Provide 3 bullet points of strategic advice. Focus on conversion, lead quality, and teacher utilization. 
-                           Format as plain text with line breaks. Maximum 150 words. Be professional and encouraging.`;
+            const prompt = `Classone Performance Context: ${dataCtx}. Provide 3 high-impact strategies in 2 sentences each. Focus on revenue and churn.`;
 
             const callGemini = async (retries = 0) => {
                 try {
@@ -455,15 +438,14 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             contents: [{ parts: [{ text: prompt }] }],
-                            systemInstruction: { parts: [{ text: "You are a professional business strategist specializing in education centers. Be concise and actionable." }] }
+                            systemInstruction: { parts: [{ text: "You are a growth consultant for education businesses. Be brief and punchy." }] }
                         })
                     });
                     const result = await response.json();
                     return result.candidates?.[0]?.content?.parts?.[0]?.text;
                 } catch (err) {
                     if (retries < 5) {
-                        const delay = Math.pow(2, retries) * 1000;
-                        await new Promise(r => setTimeout(r, delay));
+                        await new Promise(r => setTimeout(r, Math.pow(2, retries) * 1000));
                         return callGemini(retries + 1);
                     }
                     throw err;
@@ -472,13 +454,13 @@
 
             try {
                 const insight = await callGemini();
-                container.innerText = insight || "Analysis complete. Data shows stable growth with room for optimization in marketing spend.";
+                container.innerText = insight || "Analysis ready. No critical bottlenecks detected based on current data.";
             } catch (err) {
-                container.innerText = "Error generating AI insights. Please check your connection and try again later.";
+                container.innerText = "Connection to AI service timed out. Please try again.";
             }
         };
 
-        initAuth();
+        startApp();
     </script>
 </body>
 </html>
