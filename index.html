@@ -6,28 +6,15 @@
     <title>Classone CM Management Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js" type="module"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js" type="module"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js" type="module"></script>
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .status-green { background-color: #22c55e; box-shadow: 0 0 8px rgba(34,197,94,0.4); }
-        .status-yellow { background-color: #eab308; box-shadow: 0 0 8px rgba(234,179,8,0.4); }
-        .status-red { background-color: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.4); }
+        .status-green { background-color: #22c55e; }
+        .status-yellow { background-color: #eab308; }
+        .status-red { background-color: #ef4444; }
         .hidden-view { display: none; }
         .nav-active { background-color: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); color: #2563eb !important; }
         
-        .sync-indicator { 
-            position: fixed; bottom: 20px; right: 20px; 
-            padding: 8px 16px; border-radius: 99px; 
-            font-size: 10px; font-weight: 800; text-transform: uppercase;
-            display: flex; align-items: center; gap: 6px;
-            background: white; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-            z-index: 100;
-        }
         .chart-container { position: relative; height: 300px; width: 100%; }
         
         .shimmer {
@@ -42,20 +29,6 @@
     </style>
 </head>
 <body class="min-h-screen pb-20">
-    <!-- Status Overlay for initialization -->
-    <div id="init-overlay" class="fixed inset-0 bg-slate-900 z-[100] flex flex-col items-center justify-center text-white text-center p-6">
-        <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <h2 class="text-xl font-black uppercase italic tracking-tighter">Establishing Secure Link</h2>
-        <p id="init-msg" class="text-slate-400 text-xs mt-2 font-mono uppercase tracking-widest">Waiting for environment handshake...</p>
-        <div id="init-debug" class="mt-8 text-[10px] text-slate-600 bg-black/30 p-4 rounded-lg font-mono">
-            Searching for cloud config...
-        </div>
-    </div>
-
-    <div id="sync-status" class="sync-indicator hidden">
-        <div class="w-2 h-2 rounded-full bg-slate-300" id="sync-dot"></div>
-        <span id="sync-text">Connecting...</span>
-    </div>
 
     <!-- Navigation -->
     <nav class="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-50">
@@ -66,15 +39,15 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-black text-slate-900 tracking-tight leading-none uppercase">Classone Portal</h1>
-                    <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mt-1">Strategic Management System • <span id="user-id-display">Initializing...</span></p>
+                    <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mt-1">Prototype Mode • Local Session</p>
                 </div>
             </div>
             
             <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
-                <button onclick="window.switchView('dashboard')" id="btn-dashboard" class="nav-active px-4 py-2 rounded-lg text-xs font-bold transition-all text-slate-500">Analytics Dashboard</button>
-                <button onclick="window.switchView('monthly')" id="btn-monthly" class="px-4 py-2 rounded-lg text-xs font-bold transition-all text-slate-500">Monthly Tracker</button>
-                <button onclick="window.switchView('yearly')" id="btn-yearly" class="px-4 py-2 rounded-lg text-xs font-bold transition-all text-slate-500">Yearly Strategy</button>
-                <button onclick="window.switchView('settings')" id="btn-settings" class="px-4 py-2 rounded-lg text-xs font-bold transition-all text-slate-500">Target Settings</button>
+                <button onclick="switchView('dashboard')" id="btn-dashboard" class="nav-active px-4 py-2 rounded-lg text-xs font-bold transition-all text-slate-500">Analytics Dashboard</button>
+                <button onclick="switchView('monthly')" id="btn-monthly" class="px-4 py-2 rounded-lg text-xs font-bold transition-all text-slate-500">Monthly Tracker</button>
+                <button onclick="switchView('yearly')" id="btn-yearly" class="px-4 py-2 rounded-lg text-xs font-bold transition-all text-slate-500">Yearly Strategy</button>
+                <button onclick="switchView('settings')" id="btn-settings" class="px-4 py-2 rounded-lg text-xs font-bold transition-all text-slate-500">Target Settings</button>
             </div>
         </div>
     </nav>
@@ -85,10 +58,7 @@
             <header class="mb-8 flex justify-between items-end">
                 <div>
                     <h2 class="text-2xl font-black text-slate-800 italic uppercase text-blue-900">Company Intelligence</h2>
-                    <p class="text-slate-500 text-sm mt-1">Real-time visualization of organizational health.</p>
-                </div>
-                <div class="bg-white border border-slate-200 px-4 py-2 rounded-xl shadow-sm">
-                    <input type="number" id="dashboard-year-selector" value="2026" onchange="window.refreshUI()" class="w-20 font-bold text-blue-600 text-sm focus:ring-0 border-none bg-transparent outline-none">
+                    <p class="text-slate-500 text-sm mt-1">Session-based strategy overview.</p>
                 </div>
             </header>
 
@@ -98,46 +68,44 @@
                     <div class="bg-blue-600 p-2 rounded-lg text-white">
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
                     </div>
-                    <h3 class="text-sm font-black uppercase text-blue-900 tracking-wider">AI Strategy Consultant</h3>
-                    <button id="ai-refresh-btn" onclick="window.generateAIInsight()" class="ml-auto text-[10px] font-black bg-white px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-100 transition-colors uppercase">Refresh Analysis</button>
+                    <h3 class="text-sm font-black uppercase text-blue-900 tracking-wider">Strategic Advisor</h3>
+                    <button onclick="generateAIInsight()" class="ml-auto text-[10px] font-black bg-white px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-100 transition-colors uppercase">Analyze Performance</button>
                 </div>
                 <div id="ai-insight-content" class="text-sm text-blue-800 leading-relaxed font-medium">
-                    Enter data in the Monthly Tracker, then click "Refresh Analysis" for strategic recommendations.
+                    Enter actual data in the Monthly Tracker, then click "Analyze Performance" for AI feedback.
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                 <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                    <h3 class="text-sm font-black uppercase text-slate-400 tracking-widest mb-6">Annual Target vs. Actual (YTD)</h3>
+                    <h3 class="text-sm font-black uppercase text-slate-400 tracking-widest mb-6">Pace vs Target %</h3>
                     <div class="chart-container"><canvas id="performanceChart"></canvas></div>
                 </div>
                 <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-                    <h3 class="text-sm font-black uppercase text-slate-400 tracking-widest mb-6">Monthly Revenue Trajectory</h3>
+                    <h3 class="text-sm font-black uppercase text-slate-400 tracking-widest mb-6">Revenue Trend</h3>
                     <div class="chart-container"><canvas id="revenueTrendChart"></canvas></div>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div class="bg-blue-600 p-6 rounded-2xl text-white shadow-lg"><p class="text-[10px] font-black uppercase opacity-80 mb-1">Total YTD Revenue</p><h4 id="summary-revenue" class="text-3xl font-black italic">RM 0</h4></div>
-                <div class="bg-indigo-600 p-6 rounded-2xl text-white shadow-lg"><p class="text-[10px] font-black uppercase opacity-80 mb-1">Avg. Conv Rate</p><h4 id="summary-conversion" class="text-3xl font-black italic">0%</h4></div>
-                <div class="bg-emerald-600 p-6 rounded-2xl text-white shadow-lg"><p class="text-[10px] font-black uppercase opacity-80 mb-1">Total Enrollment</p><h4 id="summary-enrollment" class="text-3xl font-black italic">0</h4></div>
-                <div class="bg-slate-800 p-6 rounded-2xl text-white shadow-lg"><p class="text-[10px] font-black uppercase opacity-80 mb-1">Lead Efficiency</p><h4 id="summary-efficiency" class="text-3xl font-black italic">0.0</h4></div>
+                <div class="bg-blue-600 p-6 rounded-2xl text-white shadow-lg"><p class="text-[10px] font-black uppercase opacity-80 mb-1">YTD Revenue</p><h4 id="summary-revenue" class="text-3xl font-black italic">RM 0</h4></div>
+                <div class="bg-indigo-600 p-6 rounded-2xl text-white shadow-lg"><p class="text-[10px] font-black uppercase opacity-80 mb-1">Avg. Conversion</p><h4 id="summary-conversion" class="text-3xl font-black italic">0%</h4></div>
+                <div class="bg-emerald-600 p-6 rounded-2xl text-white shadow-lg"><p class="text-[10px] font-black uppercase opacity-80 mb-1">Enrollment</p><h4 id="summary-enrollment" class="text-3xl font-black italic">0</h4></div>
+                <div class="bg-slate-800 p-6 rounded-2xl text-white shadow-lg"><p class="text-[10px] font-black uppercase opacity-80 mb-1">Rev / Student</p><h4 id="summary-efficiency" class="text-3xl font-black italic">0</h4></div>
             </div>
         </div>
         
         <!-- View Monthly -->
         <div id="view-monthly" class="hidden-view">
              <header class="mb-8">
-                <h2 class="text-2xl font-black text-slate-800 italic uppercase text-blue-900">Monthly Execution</h2>
+                <h2 class="text-2xl font-black text-slate-800 italic uppercase text-blue-900">Data Entry</h2>
                 <div class="flex items-center gap-3 mt-4 bg-white border border-slate-200 px-4 py-2 rounded-xl shadow-sm w-fit">
-                    <select id="month-selector" onchange="window.refreshUI()" class="font-bold text-blue-600 text-sm border-none bg-transparent outline-none cursor-pointer">
+                    <select id="month-selector" onchange="renderMatrix()" class="font-bold text-blue-600 text-sm border-none bg-transparent outline-none cursor-pointer">
                         <option value="0">January</option><option value="1">February</option><option value="2">March</option>
                         <option value="3">April</option><option value="4" selected>May</option><option value="5">June</option>
                         <option value="6">July</option><option value="7">August</option><option value="8">September</option>
                         <option value="9">October</option><option value="10">November</option><option value="11">December</option>
                     </select>
-                    <div class="w-px h-4 bg-slate-200"></div>
-                    <input type="number" id="year-selector" value="2026" onchange="window.refreshUI()" class="w-20 font-bold text-blue-600 text-sm border-none bg-transparent outline-none">
                 </div>
             </header>
             <div id="matrix-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
@@ -145,7 +113,7 @@
 
         <!-- View Yearly -->
         <div id="view-yearly" class="hidden-view">
-            <h2 class="text-2xl font-black text-slate-800 italic uppercase mb-8">Yearly Strategy</h2>
+            <h2 class="text-2xl font-black text-slate-800 italic uppercase mb-8">YTD Comparison</h2>
             <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                 <table class="w-full text-left">
                     <thead class="bg-slate-50 border-b border-slate-100">
@@ -153,7 +121,7 @@
                             <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Metric</th>
                             <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Target</th>
                             <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Actual YTD</th>
-                            <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Pace</th>
+                            <th class="px-6 py-4 text-xs font-black text-slate-400 uppercase tracking-widest">Completion</th>
                         </tr>
                     </thead>
                     <tbody id="comparison-table-body" class="divide-y divide-slate-50"></tbody>
@@ -163,160 +131,89 @@
 
         <!-- View Settings -->
         <div id="view-settings" class="hidden-view">
-            <h2 class="text-2xl font-black text-slate-800 italic uppercase mb-8">Target Portal</h2>
-            <div class="flex items-center gap-2 mb-8 bg-white p-4 border border-slate-200 rounded-2xl w-fit">
-                <span class="text-[10px] font-black text-slate-400 uppercase">Year:</span>
-                <input type="number" id="settings-year-selector" value="2026" onchange="window.refreshUI()" class="w-20 font-bold text-blue-600 border-none outline-none">
-            </div>
+            <h2 class="text-2xl font-black text-slate-800 italic uppercase mb-8">Configure Targets</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8" id="settings-container"></div>
         </div>
     </main>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        let db, auth;
-        let state = { monthlyActuals: {}, monthlyStatus: {}, targets: {}, user: null, view: 'dashboard' };
+    <script>
+        // IN-MEMORY STATE SYSTEM
+        let state = {
+            monthlyActuals: {}, 
+            monthlyStatus: {}, 
+            targets: {}, 
+            view: 'dashboard'
+        };
+        
         let charts = { performance: null, revenue: null };
-        let configFound = false;
 
         const metricsDefinition = [
-            { id: 'lead_vol', label: 'Lead Volume', icon: 'm3 3 3 9-3 9 19-9Z', unit: 'L', isRate: false },
+            { id: 'lead_vol', label: 'Lead Volume', icon: 'm3 3 3 9-3 9 19-9Z', unit: '', isRate: false },
             { id: 'revenue', label: 'Revenue', icon: 'M12 1v22 M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6', unit: 'RM', isRate: false },
             { id: 'trial_conv', label: 'Trial Conv', icon: 'M22 7L13.5 15.5 8.5 10.5 2 17', unit: '%', isRate: true },
-            { id: 'enrollment', label: 'New Students', icon: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 1 0-8 4 4 0 0 1 0 8', unit: 'S', isRate: false },
-            { id: 'churn', label: 'Churn', icon: 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0', unit: 'S', isRate: false },
-            { id: 'utilization', label: 'Teacher Util', icon: 'M22 12h-4l-3 9L9 3l-3 9H2', unit: '%', isRate: true },
-            { id: 'mf_cont', label: 'MF Count', icon: 'M12 12a10 10 0 1 0 0 20 10 10 0 0 0 0-20', unit: 'P', isRate: false },
-            { id: 'sop', label: 'SOP Compliance', icon: 'm9 11 3 3L22 4 M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11', unit: '%', isRate: true },
-            { id: 'referral', label: 'Referrals', icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z', unit: 'C', isRate: false }
+            { id: 'enrollment', label: 'New Students', icon: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 1 0-8 4 4 0 0 1 0 8', unit: '', isRate: false },
+            { id: 'churn', label: 'Churn', icon: 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0', unit: '', isRate: false },
+            { id: 'utilization', label: 'Teacher Util', icon: 'M22 12h-4l-3 9L9 3l-3 9H2', unit: '%', isRate: true }
         ];
 
-        // POLLING INITIALIZATION
-        // The environment provides vars asynchronously. We poll until they exist.
-        const pollForConfig = setInterval(() => {
-            const dbg = document.getElementById('init-debug');
-            const msg = document.getElementById('init-msg');
-
-            const hasConfig = typeof __firebase_config !== 'undefined';
-            const hasAppId = typeof __app_id !== 'undefined';
-            const hasToken = typeof __initial_auth_token !== 'undefined';
-
-            dbg.innerHTML = `
-                Config: ${hasConfig ? 'YES' : 'NO'}<br>
-                AppID: ${hasAppId ? 'YES' : 'NO'}<br>
-                Token: ${hasToken ? 'YES' : 'NO'}
-            `;
-
-            if (hasConfig && hasAppId) {
-                clearInterval(pollForConfig);
-                msg.innerText = "Config acquired! Booting services...";
-                startApp();
-            }
-        }, 500);
-
-        const startApp = async () => {
-            try {
-                const firebaseConfig = JSON.parse(__firebase_config);
-                const appId = __app_id;
-
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-
-                // Auth
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        state.user = user;
-                        document.getElementById('user-id-display').innerText = `ID: ${user.uid.substring(0, 8)}`;
-                        
-                        // Remove Overlay
-                        document.getElementById('init-overlay').classList.add('hidden');
-                        document.getElementById('sync-status').classList.remove('hidden');
-                        
-                        setupListeners(appId);
-                    }
-                });
-            } catch (err) {
-                document.getElementById('init-msg').innerText = "Critical Boot Failure";
-                document.getElementById('init-debug').innerText = err.message;
-            }
-        };
-
-        const setupListeners = (appId) => {
-            updateSyncStatus('Syncing...', 'bg-yellow-400');
-            
-            const metricsRef = collection(db, 'artifacts', appId, 'public', 'data', 'metrics');
-            const targetsRef = collection(db, 'artifacts', appId, 'public', 'data', 'targets');
-
-            onSnapshot(metricsRef, (snap) => {
-                snap.forEach(doc => {
-                    state.monthlyActuals[doc.id] = doc.data().actual;
-                    state.monthlyStatus[doc.id] = doc.data().status;
-                });
-                window.refreshUI();
-                updateSyncStatus('Live', 'bg-green-500');
-            }, (err) => updateSyncStatus('Offline', 'bg-red-500'));
-
-            onSnapshot(targetsRef, (snap) => {
-                snap.forEach(doc => { state.targets[doc.id] = doc.data(); });
-                window.refreshUI();
+        // INITIALIZE MOCK DATA
+        function initMockData() {
+            metricsDefinition.forEach(m => {
+                const targetKey = `2026-${m.id}`;
+                state.targets[targetKey] = {
+                    annual: m.isRate ? 80 : 1200,
+                    monthly: Array(12).fill(m.isRate ? 80 : 100)
+                };
             });
-        };
+        }
 
-        const updateSyncStatus = (text, color) => {
-            const txt = document.getElementById('sync-text');
-            const dot = document.getElementById('sync-dot');
-            if (txt) txt.innerText = text;
-            if (dot) dot.className = `w-2 h-2 rounded-full ${color}`;
-        };
-
-        // UI LOGIC
-        window.switchView = (v) => {
+        function switchView(v) {
             state.view = v;
             ['dashboard', 'monthly', 'yearly', 'settings'].forEach(id => {
-                document.getElementById(`view-${id}`)?.classList.add('hidden-view');
-                document.getElementById(`btn-${id}`)?.classList.remove('nav-active');
+                document.getElementById(`view-${id}`).classList.add('hidden-view');
+                document.getElementById(`btn-${id}`).classList.remove('nav-active');
             });
-            document.getElementById(`view-${v}`)?.classList.remove('hidden-view');
-            document.getElementById(`btn-${v}`)?.classList.add('nav-active');
-            window.refreshUI();
+            document.getElementById(`view-${v}`).classList.remove('hidden-view');
+            document.getElementById(`btn-${v}`).classList.add('nav-active');
+            
+            if (v === 'dashboard') renderDashboard();
+            if (v === 'monthly') renderMatrix();
+            if (v === 'yearly') renderComparison();
+            if (v === 'settings') renderSettings();
+        }
+
+        // DATA SAVING (LOCAL)
+        window.saveActual = (key, val) => {
+            state.monthlyActuals[key] = parseFloat(val) || 0;
         };
 
-        window.refreshUI = () => {
-            if (state.view === 'dashboard') renderDashboard();
-            if (state.view === 'monthly') renderMatrix();
-            if (state.view === 'yearly') renderComparison();
-            if (state.view === 'settings') loadSettingsData();
+        window.toggleStatus = (key) => {
+            const states = ['green', 'yellow', 'red'];
+            const current = state.monthlyStatus[key] || 'green';
+            const next = states[(states.indexOf(current) + 1) % 3];
+            state.monthlyStatus[key] = next;
+            renderMatrix();
         };
 
-        const renderDashboard = () => {
-            const year = document.getElementById('dashboard-year-selector').value;
+        // RENDERERS
+        function renderDashboard() {
             const labels = metricsDefinition.map(m => m.label);
             const actualPercents = [];
             let totalRevenue = 0, totalEnrollment = 0, convSum = 0, monthlyRevenues = Array(12).fill(0);
 
             metricsDefinition.forEach(m => {
-                const targetKey = `${year}-${m.id}`;
-                const tVal = state.targets[targetKey]?.annual || 0;
+                const targetKey = `2026-${m.id}`;
+                const tVal = state.targets[targetKey]?.annual || 1;
                 let actuals = [];
                 for(let i=0; i<12; i++) {
-                    const v = state.monthlyActuals[`${i}-${year}-${m.id}`];
+                    const v = state.monthlyActuals[`${i}-2026-${m.id}`];
                     if(v !== undefined) {
-                        actuals.push(parseFloat(v));
-                        if(m.id === 'revenue') monthlyRevenues[i] = parseFloat(v);
+                        actuals.push(v);
+                        if(m.id === 'revenue') monthlyRevenues[i] = v;
                     }
                 }
                 const actualVal = m.isRate ? (actuals.length ? actuals.reduce((a,b)=>a+b,0)/actuals.length : 0) : actuals.reduce((a,b)=>a+b,0);
-                actualPercents.push(tVal > 0 ? (actualVal / tVal) * 100 : 0);
+                actualPercents.push((actualVal / tVal) * 100);
 
                 if(m.id === 'revenue') totalRevenue = actualVal;
                 if(m.id === 'enrollment') totalEnrollment = actualVal;
@@ -331,27 +228,29 @@
             if (charts.performance) charts.performance.destroy();
             charts.performance = new Chart(document.getElementById('performanceChart'), {
                 type: 'bar',
-                data: { labels, datasets: [{ label: 'YTD Pace %', data: actualPercents, backgroundColor: '#2563eb', borderRadius: 4 }] },
+                data: { labels, datasets: [{ label: 'Pace %', data: actualPercents, backgroundColor: '#2563eb', borderRadius: 6 }] },
                 options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 150 } } }
             });
 
             if (charts.revenue) charts.revenue.destroy();
             charts.revenue = new Chart(document.getElementById('revenueTrendChart'), {
                 type: 'line',
-                data: { labels: ['J','F','M','A','M','J','J','A','S','O','N','D'], datasets: [{ data: monthlyRevenues, borderColor: '#2563eb', fill: true, tension: 0.4 }] },
+                data: { labels: ['J','F','M','A','M','J','J','A','S','O','N','D'], datasets: [{ label: 'Revenue', data: monthlyRevenues, borderColor: '#2563eb', tension: 0.4, fill: true, backgroundColor: 'rgba(37, 99, 235, 0.05)' }] },
                 options: { responsive: true, maintainAspectRatio: false }
             });
-        };
+        }
 
-        const renderMatrix = () => {
+        function renderMatrix() {
             const m = document.getElementById('month-selector').value;
-            const y = document.getElementById('year-selector').value;
+            const y = "2026";
             const grid = document.getElementById('matrix-grid');
             grid.innerHTML = '';
+            
             metricsDefinition.forEach(metric => {
                 const key = `${m}-${y}-${metric.id}`;
-                const tData = state.targets[`${y}-${metric.id}`] || { annual: 0, monthly: Array(12).fill(0) };
+                const tData = state.targets[`${y}-${metric.id}`];
                 const targetVal = metric.isRate ? tData.annual : tData.monthly[m];
+                
                 const card = document.createElement('div');
                 card.className = "bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between h-56";
                 card.innerHTML = `
@@ -359,139 +258,101 @@
                         <div class="p-2 rounded-lg bg-slate-50 text-slate-400">
                              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="${metric.icon}"/></svg>
                         </div>
-                        <div onclick="window.toggleStatus('${key}')" class="w-6 h-6 rounded-full cursor-pointer status-${state.monthlyStatus[key] || 'green'}"></div>
+                        <div onclick="toggleStatus('${key}')" class="w-6 h-6 rounded-full cursor-pointer status-${state.monthlyStatus[key] || 'green'}"></div>
                     </div>
                     <div>
                         <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">${metric.label}</h4>
                         <p class="text-xs font-bold text-blue-600 mt-1">Goal: ${targetVal}${metric.unit}</p>
                     </div>
-                    <div class="mt-2 flex items-center gap-2">
-                        <input type="number" value="${state.monthlyActuals[key] || ''}" onchange="window.saveActual('${key}', this.value)" placeholder="Actual" 
-                               class="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm font-bold">
+                    <div class="mt-2">
+                        <input type="number" value="${state.monthlyActuals[key] || ''}" oninput="saveActual('${key}', this.value)" placeholder="Enter Actual" 
+                               class="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-blue-100 outline-none transition-all">
                     </div>
                 `;
                 grid.appendChild(card);
             });
-        };
+        }
 
-        window.toggleStatus = async (key) => {
-            const states = ['green', 'yellow', 'red'];
-            const next = states[(states.indexOf(state.monthlyStatus[key] || 'green') + 1) % 3];
-            await setDoc(doc(db, 'artifacts', __app_id, 'public', 'data', 'metrics', key), { status: next, actual: state.monthlyActuals[key] || 0 }, { merge: true });
-        };
+        function renderComparison() {
+            const tbody = document.getElementById('comparison-table-body');
+            tbody.innerHTML = '';
+            metricsDefinition.forEach(m => {
+                const target = state.targets[`2026-${m.id}`].annual;
+                let vals = [];
+                for(let i=0; i<12; i++) if(state.monthlyActuals[`${i}-2026-${m.id}`]) vals.push(state.monthlyActuals[`${i}-2026-${m.id}`]);
+                const actual = m.isRate ? (vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0) : vals.reduce((a,b)=>a+b,0);
+                const pace = (actual / target * 100).toFixed(1);
+                
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="px-6 py-4 text-xs font-black uppercase">${m.label}</td>
+                        <td class="px-6 py-4 text-xs font-bold text-slate-500">${target}${m.unit}</td>
+                        <td class="px-6 py-4 text-xs font-bold text-blue-600">${actual.toFixed(1)}${m.unit}</td>
+                        <td class="px-6 py-4 text-xs font-black">${pace}%</td>
+                    </tr>
+                `;
+            });
+        }
 
-        window.saveActual = async (key, val) => {
-            await setDoc(doc(db, 'artifacts', __app_id, 'public', 'data', 'metrics', key), { actual: parseFloat(val) || 0, status: state.monthlyStatus[key] || 'green' }, { merge: true });
-        };
-
-        const loadSettingsData = () => {
-            const year = document.getElementById('settings-year-selector').value;
+        function renderSettings() {
             const container = document.getElementById('settings-container');
             container.innerHTML = '';
-            metricsDefinition.forEach(metric => {
-                const targetKey = `${year}-${metric.id}`;
-                const data = state.targets[targetKey] || { annual: 0, monthly: Array(12).fill(0) };
+            metricsDefinition.forEach(m => {
+                const key = `2026-${m.id}`;
+                const data = state.targets[key];
                 const section = document.createElement('div');
                 section.className = "p-6 bg-slate-50 rounded-3xl border border-slate-100";
                 section.innerHTML = `
-                    <h3 class="font-black text-xs uppercase mb-4">${metric.label} Targets</h3>
-                    <div class="bg-blue-600 p-4 rounded-xl flex justify-between items-center mb-4">
-                        <span class="text-[10px] font-black text-blue-50 uppercase">Annual</span>
-                        <input type="number" value="${data.annual || ''}" onchange="window.handleAnnualInput('${targetKey}', this.value, ${metric.isRate})" class="w-24 bg-blue-500 text-white font-black text-right border-none rounded">
-                    </div>
-                    <div class="grid grid-cols-4 gap-2">
-                        ${data.monthly.map((val, i) => `
-                            <div class="bg-white p-2 rounded text-center">
-                                <p class="text-[8px] font-black text-slate-400">${new Date(0,i).toLocaleString('en',{month:'short'})}</p>
-                                <input type="number" value="${val}" onchange="window.handleMonthlyInput('${targetKey}', ${i}, this.value, ${metric.isRate})" class="w-full text-[10px] font-bold text-center border-none">
-                            </div>
-                        `).join('')}
+                    <h3 class="font-black text-xs uppercase mb-4">${m.label} Annual Goal</h3>
+                    <div class="bg-blue-600 p-4 rounded-xl flex justify-between items-center">
+                        <span class="text-[10px] font-black text-blue-50 uppercase">Target ${m.unit}</span>
+                        <input type="number" value="${data.annual}" onchange="updateAnnualTarget('${key}', this.value, ${m.isRate})" class="w-24 bg-blue-500 text-white font-black text-right border-none rounded">
                     </div>
                 `;
                 container.appendChild(section);
             });
-        };
+        }
 
-        window.handleAnnualInput = async (targetKey, val, isRate) => {
+        window.updateAnnualTarget = (key, val, isRate) => {
             const annual = parseFloat(val) || 0;
-            const monthly = isRate ? Array(12).fill(annual) : Array(12).fill(parseFloat((annual/12).toFixed(1)));
-            await setDoc(doc(db, 'artifacts', __app_id, 'public', 'data', 'targets', targetKey), { annual, monthly });
+            state.targets[key] = {
+                annual: annual,
+                monthly: Array(12).fill(isRate ? annual : parseFloat((annual/12).toFixed(1)))
+            };
         };
 
-        window.handleMonthlyInput = async (targetKey, index, val, isRate) => {
-            const current = state.targets[targetKey] || { annual: 0, monthly: Array(12).fill(0) };
-            let updatedMonthly = [...current.monthly]; updatedMonthly[index] = parseFloat(val) || 0;
-            let updatedAnnual = isRate ? updatedMonthly[index] : updatedMonthly.reduce((a, b) => a + b, 0);
-            if (isRate) updatedMonthly = Array(12).fill(updatedMonthly[index]);
-            await setDoc(doc(db, 'artifacts', __app_id, 'public', 'data', 'targets', targetKey), { annual: updatedAnnual, monthly: updatedMonthly });
-        };
-
-        const renderComparison = () => {
-            const year = "2026";
-            const tbody = document.getElementById('comparison-table-body');
-            tbody.innerHTML = '';
-            metricsDefinition.forEach(metric => {
-                const targetKey = `${year}-${metric.id}`;
-                const t = state.targets[targetKey] || { annual: 0 };
-                let actuals = []; 
-                for(let m=0; m<12; m++) {
-                    const v = state.monthlyActuals[`${m}-${year}-${metric.id}`];
-                    if(v !== undefined) actuals.push(parseFloat(v));
-                }
-                const actualVal = metric.isRate ? (actuals.length > 0 ? actuals.reduce((a,b)=>a+b,0)/actuals.length : 0) : actuals.reduce((a,b)=>a+b,0);
-                const pace = t.annual > 0 ? ((actualVal/t.annual)*100).toFixed(1) : 0;
-                tbody.innerHTML += `<tr><td class="px-6 py-4 text-xs font-black uppercase">${metric.label}</td><td class="px-6 py-4 text-xs font-bold">${t.annual}</td><td class="px-6 py-4 text-xs font-bold text-blue-600">${actualVal.toFixed(1)}</td><td class="px-6 py-4 text-xs font-black">${pace}%</td></tr>`;
-            });
-        };
-
-        // AI STRATEGY
-        window.generateAIInsight = async () => {
+        // AI ENGINE
+        async function generateAIInsight() {
             const container = document.getElementById('ai-insight-content');
             container.innerHTML = `<div class="h-4 w-3/4 shimmer rounded mb-2"></div><div class="h-4 w-1/2 shimmer rounded"></div>`;
             
-            const year = "2026";
-            const dataCtx = metricsDefinition.map(m => {
-                const target = state.targets[`${year}-${m.id}`]?.annual || 0;
-                let actuals = [];
-                for(let i=0; i<12; i++) {
-                    const v = state.monthlyActuals[`${i}-${year}-${m.id}`];
-                    if(v) actuals.push(parseFloat(v));
-                }
-                const actual = m.isRate ? (actuals.length ? actuals.reduce((a,b)=>a+b,0)/actuals.length : 0) : actuals.reduce((a,b)=>a+b,0);
-                return `${m.label}: T-${target}/A-${actual.toFixed(1)}`;
+            const dataContext = metricsDefinition.map(m => {
+                const target = state.targets[`2026-${m.id}`].annual;
+                let vals = [];
+                for(let i=0; i<12; i++) if(state.monthlyActuals[`${i}-2026-${m.id}`]) vals.push(state.monthlyActuals[`${i}-2026-${m.id}`]);
+                const actual = m.isRate ? (vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0) : vals.reduce((a,b)=>a+b,0);
+                return `${m.label}: ${actual}/${target}`;
             }).join(', ');
 
-            const apiKey = ""; // Provided by environment
-            const prompt = `Classone Performance Context: ${dataCtx}. Provide 3 high-impact strategies in 2 sentences each. Focus on revenue and churn.`;
-
-            const callGemini = async (retries = 0) => {
-                try {
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: prompt }] }],
-                            systemInstruction: { parts: [{ text: "You are a growth consultant for education businesses. Be brief and punchy." }] }
-                        })
-                    });
-                    const result = await response.json();
-                    return result.candidates?.[0]?.content?.parts?.[0]?.text;
-                } catch (err) {
-                    if (retries < 5) {
-                        await new Promise(r => setTimeout(r, Math.pow(2, retries) * 1000));
-                        return callGemini(retries + 1);
-                    }
-                    throw err;
-                }
-            };
-
+            const apiKey = ""; 
             try {
-                const insight = await callGemini();
-                container.innerText = insight || "Analysis ready. No critical bottlenecks detected based on current data.";
-            } catch (err) {
-                container.innerText = "AI service timed out. Please try again.";
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: `Strategy Analysis for: ${dataContext}. Give 2 brief, bold tactical suggestions.` }] }]
+                    })
+                });
+                const result = await response.json();
+                container.innerText = result.candidates?.[0]?.content?.parts?.[0]?.text || "Insights ready. Boost lead volume to hit revenue targets.";
+            } catch (e) {
+                container.innerText = "Consultant is offline. Please check data entries.";
             }
-        };
+        }
+
+        // Start
+        initMockData();
+        renderDashboard();
     </script>
 </body>
 </html>
