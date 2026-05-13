@@ -5,233 +5,617 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Classone CM Management Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for Dashboards -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js" type="module"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js" type="module"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js" type="module"></script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
-        body { font-family: 'Inter', sans-serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         .status-green { background-color: #22c55e; box-shadow: 0 0 8px rgba(34,197,94,0.4); }
         .status-yellow { background-color: #eab308; box-shadow: 0 0 8px rgba(234,179,8,0.4); }
         .status-red { background-color: #ef4444; box-shadow: 0 0 8px rgba(239,68,68,0.4); }
+        .hidden-view { display: none; }
+        .nav-active { background-color: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); color: #2563eb !important; }
+        input[type="number"]::-webkit-inner-spin-button, 
+        input[type="number"]::-webkit-outer-spin-button { opacity: 1; }
+        
+        .sync-indicator { 
+            position: fixed; bottom: 20px; right: 20px; 
+            padding: 8px 16px; border-radius: 99px; 
+            font-size: 10px; font-weight: 800; text-transform: uppercase;
+            display: flex; items-center: center; gap: 6px;
+            background: white; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            z-index: 100;
+        }
+        .chart-container { position: relative; height: 300px; width: 100%; }
     </style>
 </head>
-<body class="bg-white min-h-screen p-4 md:p-8">
-    <div class="max-w-5xl mx-auto">
-        <!-- Header -->
-        <header class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-100 pb-6">
-            <div>
-                <h1 class="text-3xl font-black text-slate-900 tracking-tight">Management Dashboard</h1>
-                <p class="text-slate-500 font-medium">Classone Online Core Growth Matrix</p>
-            </div>
-            <div class="flex gap-3">
-                <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100 text-[11px] font-bold text-slate-600 uppercase">
-                    <div class="w-2 h-2 rounded-full bg-green-500"></div> Healthy
-                </div>
-                <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100 text-[11px] font-bold text-slate-600 uppercase">
-                    <div class="w-2 h-2 rounded-full bg-yellow-500"></div> Warning
-                </div>
-                <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100 text-[11px] font-bold text-slate-600 uppercase">
-                    <div class="w-2 h-2 rounded-full bg-red-500"></div> Critical
-                </div>
-            </div>
-        </header>
-
-        <!-- 3x3 Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            <!-- Column 1 -->
-            <div class="card p-5 rounded-xl border border-blue-200 shadow-md ring-2 ring-blue-50/50 bg-white flex flex-col justify-between h-48">
-                <div class="flex justify-between items-start">
-                    <div class="p-2 rounded-lg bg-blue-100 text-blue-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 3 3 9-3 9 19-9Z"/><path d="M6 12h16"/></svg>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-[10px] font-bold text-blue-500 uppercase">Core Metric</span>
-                        <div onclick="toggleStatus(this)" class="w-4 h-4 rounded-full cursor-pointer transition-all duration-300 status-yellow" data-status="yellow"></div>
-                    </div>
-                </div>
-                <div>
-                    <h3 class="text-sm font-bold uppercase text-slate-800">Lead Volume</h3>
-                    <p class="text-xs text-slate-400 mt-1 italic">Target: 450 Raw / 113 Quality</p>
-                </div>
-                <div class="mt-4">
-                    <input type="text" placeholder="Actual" class="w-full bg-white border border-slate-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20">
-                </div>
-            </div>
-
-            <!-- Column 2 (Conversion) -->
-            <div class="card p-5 rounded-xl border border-blue-200 shadow-md ring-2 ring-blue-50/50 bg-white flex flex-col justify-between h-48">
-                <div class="flex justify-between items-start">
-                    <div class="p-2 rounded-lg bg-blue-100 text-blue-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-[10px] font-bold text-blue-500 uppercase">Core Metric</span>
-                        <div onclick="toggleStatus(this)" class="w-4 h-4 rounded-full cursor-pointer transition-all duration-300 status-yellow" data-status="yellow"></div>
-                    </div>
-                </div>
-                <div>
-                    <h3 class="text-sm font-bold uppercase text-slate-800">Trial Conversion</h3>
-                    <p class="text-xs text-slate-400 mt-1 italic">Target: 40% Lead-to-Trial</p>
-                </div>
-                <div class="mt-4">
-                    <input type="text" placeholder="Actual" class="w-full bg-white border border-slate-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20">
-                </div>
-            </div>
-
-            <!-- Column 3 (Enrollment) -->
-            <div class="card p-5 rounded-xl border border-blue-200 shadow-md ring-2 ring-blue-50/50 bg-white flex flex-col justify-between h-48">
-                <div class="flex justify-between items-start">
-                    <div class="p-2 rounded-lg bg-blue-100 text-blue-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-[10px] font-bold text-blue-500 uppercase">Core Metric</span>
-                        <div onclick="toggleStatus(this)" class="w-4 h-4 rounded-full cursor-pointer transition-all duration-300 status-green" data-status="green"></div>
-                    </div>
-                </div>
-                <div>
-                    <h3 class="text-sm font-bold uppercase text-slate-800">New Enrollments</h3>
-                    <p class="text-xs text-slate-400 mt-1 italic">Target: 18 Students/mo</p>
-                </div>
-                <div class="mt-4">
-                    <input type="text" placeholder="Actual" class="w-full bg-white border border-slate-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20">
-                </div>
-            </div>
-
-            <!-- Row 2: Secondary Metrics -->
-            <div class="card p-5 rounded-xl border border-slate-200 bg-slate-50/50 opacity-90 shadow-sm flex flex-col justify-between h-48">
-                <div class="flex justify-between items-start">
-                    <div class="p-2 rounded-lg bg-slate-100 text-slate-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                    </div>
-                    <div onclick="toggleStatus(this)" class="w-4 h-4 rounded-full cursor-pointer transition-all duration-300 status-green" data-status="green"></div>
-                </div>
-                <div>
-                    <h3 class="text-sm font-bold uppercase text-slate-500">Revenue Achievement</h3>
-                    <p class="text-xs text-slate-400 mt-1 italic">Target: RM 73k/mo</p>
-                </div>
-                <div class="mt-4">
-                    <input type="text" placeholder="Actual" class="w-full bg-white border border-slate-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20">
-                </div>
-            </div>
-
-            <div class="card p-5 rounded-xl border border-slate-200 bg-slate-50/50 opacity-90 shadow-sm flex flex-col justify-between h-48">
-                <div class="flex justify-between items-start">
-                    <div class="p-2 rounded-lg bg-slate-100 text-slate-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                    </div>
-                    <div onclick="toggleStatus(this)" class="w-4 h-4 rounded-full cursor-pointer transition-all duration-300 status-green" data-status="green"></div>
-                </div>
-                <div>
-                    <h3 class="text-sm font-bold uppercase text-slate-500">Teacher Utilization</h3>
-                    <p class="text-xs text-slate-400 mt-1 italic">Target: 75% Occupancy</p>
-                </div>
-                <div class="mt-4">
-                    <input type="text" placeholder="Actual" class="w-full bg-white border border-slate-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20">
-                </div>
-            </div>
-
-            <div class="card p-5 rounded-xl border border-slate-200 bg-slate-50/50 opacity-90 shadow-sm flex flex-col justify-between h-48">
-                <div class="flex justify-between items-start">
-                    <div class="p-2 rounded-lg bg-slate-100 text-slate-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
-                    </div>
-                    <div onclick="toggleStatus(this)" class="w-4 h-4 rounded-full cursor-pointer transition-all duration-300 status-green" data-status="green"></div>
-                </div>
-                <div>
-                    <h3 class="text-sm font-bold uppercase text-slate-500">MF Contribution</h3>
-                    <p class="text-xs text-slate-400 mt-1 italic">Target: RM 10k/franchisee</p>
-                </div>
-                <div class="mt-4">
-                    <input type="text" placeholder="Actual" class="w-full bg-white border border-slate-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20">
-                </div>
-            </div>
-
-            <!-- Row 3: Quality Metrics -->
-            <div class="card p-5 rounded-xl border border-slate-200 bg-slate-50/50 opacity-90 shadow-sm flex flex-col justify-between h-48">
-                <div class="flex justify-between items-start">
-                    <div class="p-2 rounded-lg bg-slate-100 text-slate-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
-                    </div>
-                    <div onclick="toggleStatus(this)" class="w-4 h-4 rounded-full cursor-pointer transition-all duration-300 status-green" data-status="green"></div>
-                </div>
-                <div>
-                    <h3 class="text-sm font-bold uppercase text-slate-500">Student Churn</h3>
-                    <p class="text-xs text-slate-400 mt-1 italic">Target: < 4 students/mo</p>
-                </div>
-                <div class="mt-4">
-                    <input type="text" placeholder="Actual" class="w-full bg-white border border-slate-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20">
-                </div>
-            </div>
-
-            <div class="card p-5 rounded-xl border border-slate-200 bg-slate-50/50 opacity-90 shadow-sm flex flex-col justify-between h-48">
-                <div class="flex justify-between items-start">
-                    <div class="p-2 rounded-lg bg-slate-100 text-slate-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-                    </div>
-                    <div onclick="toggleStatus(this)" class="w-4 h-4 rounded-full cursor-pointer transition-all duration-300 status-green" data-status="green"></div>
-                </div>
-                <div>
-                    <h3 class="text-sm font-bold uppercase text-slate-500">SOP Compliance</h3>
-                    <p class="text-xs text-slate-400 mt-1 italic">Target: 100% SOP</p>
-                </div>
-                <div class="mt-4">
-                    <input type="text" placeholder="Actual" class="w-full bg-white border border-slate-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20">
-                </div>
-            </div>
-
-            <div class="card p-5 rounded-xl border border-slate-200 bg-slate-50/50 opacity-90 shadow-sm flex flex-col justify-between h-48">
-                <div class="flex justify-between items-start">
-                    <div class="p-2 rounded-lg bg-slate-100 text-slate-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                    </div>
-                    <div onclick="toggleStatus(this)" class="w-4 h-4 rounded-full cursor-pointer transition-all duration-300 status-green" data-status="green"></div>
-                </div>
-                <div>
-                    <h3 class="text-sm font-bold uppercase text-slate-500">Referral Count</h3>
-                    <p class="text-xs text-slate-400 mt-1 italic">Target: 2-3 Monthly</p>
-                </div>
-                <div class="mt-4">
-                    <input type="text" placeholder="Actual" class="w-full bg-white border border-slate-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20">
-                </div>
-            </div>
-
-        </div>
-
-        <!-- Footer Stats -->
-        <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="md:col-span-2 p-6 bg-slate-900 rounded-2xl text-white shadow-xl">
-               <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
-                 Executive Summary
-               </h2>
-               <div class="grid grid-cols-2 gap-8">
-                 <div>
-                   <p class="text-slate-400 text-xs uppercase font-black mb-2">Primary Bottleneck</p>
-                   <p class="text-sm leading-relaxed">Marketing lead volume is currently insufficient, creating a ripple effect that prevents the sales team from hitting enrollment targets despite healthy trial interest.</p>
-                 </div>
-                 <div>
-                   <p class="text-slate-400 text-xs uppercase font-black mb-2">Immediate Focus</p>
-                   <p class="text-sm leading-relaxed text-blue-300 font-medium">Optimize Lead Quality vs. Quantity and standardize the trial-to-close sales script training at the center level.</p>
-                 </div>
-               </div>
-            </div>
-            <div class="p-6 bg-blue-600 rounded-2xl text-white shadow-xl flex flex-col justify-center text-center">
-               <p class="text-blue-100 text-xs uppercase font-black mb-1">Monthly Goal</p>
-               <h3 class="text-3xl font-black">18</h3>
-               <p class="text-sm font-bold">New Students</p>
-            </div>
-         </div>
+<body class="min-h-screen pb-20">
+    <div id="sync-status" class="sync-indicator">
+        <div class="w-2 h-2 rounded-full bg-slate-300" id="sync-dot"></div>
+        <span id="sync-text">Connecting...</span>
     </div>
 
-    <script>
-        function toggleStatus(el) {
-            const states = ['green', 'yellow', 'red'];
-            let current = el.getAttribute('data-status');
-            let nextIndex = (states.indexOf(current) + 1) % 3;
-            let next = states[nextIndex];
+    <!-- Top Navigation -->
+    <nav class="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-600 p-2 rounded-lg text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black text-slate-900 tracking-tight leading-none uppercase">Classone Portal</h1>
+                    <p class="text-[10px] text-slate-500 uppercase font-bold tracking-widest mt-1">Strategic Management System • <span id="user-id-display">Live Mode</span></p>
+                </div>
+            </div>
             
-            el.setAttribute('data-status', next);
-            el.className = `w-4 h-4 rounded-full cursor-pointer transition-all duration-300 status-${next}`;
-        }
+            <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+                <button onclick="window.switchView('dashboard')" id="btn-dashboard" class="nav-active px-4 py-2 rounded-lg text-xs font-bold transition-all text-slate-500">Analytics Dashboard</button>
+                <button onclick="window.switchView('monthly')" id="btn-monthly" class="px-4 py-2 rounded-lg text-xs font-bold transition-all text-slate-500">Monthly Tracker</button>
+                <button onclick="window.switchView('yearly')" id="btn-yearly" class="px-4 py-2 rounded-lg text-xs font-bold transition-all text-slate-500">Yearly Strategy</button>
+                <button onclick="window.switchView('settings')" id="btn-settings" class="px-4 py-2 rounded-lg text-xs font-bold transition-all text-slate-500">Target Settings</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-4 md:p-8">
+        
+        <!-- PAGE 0: COMPANY DASHBOARD -->
+        <div id="view-dashboard">
+            <header class="mb-8 flex justify-between items-end">
+                <div>
+                    <h2 class="text-2xl font-black text-slate-800 italic uppercase text-blue-900">Company Intelligence</h2>
+                    <p class="text-slate-500 text-sm mt-1">Real-time visualization of organizational health and trajectory.</p>
+                </div>
+                <div class="bg-white border border-slate-200 px-4 py-2 rounded-xl shadow-sm">
+                    <input type="number" id="dashboard-year-selector" value="2026" onchange="window.refreshUI()" class="w-20 font-bold text-blue-600 text-sm focus:ring-0 border-none bg-transparent outline-none">
+                </div>
+            </header>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Chart 1: Performance Matrix -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 class="text-sm font-black uppercase text-slate-400 tracking-widest mb-6">Annual Target vs. Actual (YTD)</h3>
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Revenue Trend -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 class="text-sm font-black uppercase text-slate-400 tracking-widest mb-6">Monthly Revenue Trajectory</h3>
+                    <div class="chart-container">
+                        <canvas id="revenueTrendChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Metrics Summary Cards -->
+                <div class="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-blue-600 p-6 rounded-2xl text-white shadow-lg shadow-blue-100">
+                        <p class="text-[10px] font-black uppercase opacity-80 mb-1">Total YTD Revenue</p>
+                        <h4 id="summary-revenue" class="text-3xl font-black italic">RM 0</h4>
+                    </div>
+                    <div class="bg-indigo-600 p-6 rounded-2xl text-white shadow-lg shadow-indigo-100">
+                        <p class="text-[10px] font-black uppercase opacity-80 mb-1">Avg. Conversion Rate</p>
+                        <h4 id="summary-conversion" class="text-3xl font-black italic">0%</h4>
+                    </div>
+                    <div class="bg-emerald-600 p-6 rounded-2xl text-white shadow-lg shadow-emerald-100">
+                        <p class="text-[10px] font-black uppercase opacity-80 mb-1">Total Enrollment</p>
+                        <h4 id="summary-enrollment" class="text-3xl font-black italic">0</h4>
+                    </div>
+                    <div class="bg-slate-800 p-6 rounded-2xl text-white shadow-lg shadow-slate-200">
+                        <p class="text-[10px] font-black uppercase opacity-80 mb-1">Lead Efficiency</p>
+                        <h4 id="summary-efficiency" class="text-3xl font-black italic">0.0</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- PAGE 1: MONTHLY TRACKER -->
+        <div id="view-monthly" class="hidden-view">
+            <header class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-black text-slate-800 italic uppercase text-blue-900">Monthly Execution</h2>
+                    <div class="flex items-center gap-3 mt-2 bg-white border border-slate-200 px-4 py-2 rounded-xl shadow-sm w-fit">
+                        <select id="month-selector" class="font-bold text-blue-600 text-sm focus:ring-0 cursor-pointer border-none bg-transparent outline-none">
+                            <option value="0">January</option><option value="1">February</option><option value="2">March</option>
+                            <option value="3">April</option><option value="4" selected>May</option><option value="5">June</option>
+                            <option value="6">July</option><option value="7">August</option><option value="8">September</option>
+                            <option value="9">October</option><option value="10">November</option><option value="11">December</option>
+                        </select>
+                        <div class="w-px h-4 bg-slate-200"></div>
+                        <input type="number" id="year-selector" value="2026" class="w-20 font-bold text-blue-600 text-sm focus:ring-0 border-none bg-transparent outline-none">
+                    </div>
+                </div>
+            </header>
+            <div id="matrix-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+        </div>
+
+        <!-- PAGE 2: YEARLY STRATEGY -->
+        <div id="view-yearly" class="hidden-view">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-2xl font-black text-slate-800 italic uppercase text-indigo-900">Yearly Strategy & Performance</h2>
+                <button onclick="window.generateAIStrategy()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg shadow-indigo-200 transition-all">
+                    Run AI Strategy Engine
+                </button>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div class="lg:col-span-8">
+                    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-50 border-b border-slate-100">
+                                <tr>
+                                    <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Metric</th>
+                                    <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Yearly Target</th>
+                                    <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Actual YTD Avg/Hit</th>
+                                    <th class="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Pace (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="comparison-table-body" class="divide-y divide-slate-50"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="lg:col-span-4">
+                    <div class="bg-slate-900 rounded-2xl p-6 text-white min-h-[400px] shadow-xl">
+                        <div class="flex items-center gap-2 mb-4 border-b border-slate-800 pb-4">
+                            <div class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></div>
+                            <h3 class="font-black text-sm uppercase tracking-widest text-indigo-400">AI Analysis Terminal</h3>
+                        </div>
+                        <div id="ai-content" class="space-y-4 text-xs text-slate-400 leading-relaxed">
+                            Awaiting performance data to generate strategic roadmap...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 3: TARGET SETTINGS -->
+        <div id="view-settings" class="hidden-view">
+            <header class="mb-8">
+                <h2 class="text-2xl font-black text-slate-800 italic uppercase text-blue-900">Target Portal</h2>
+                <p class="text-slate-500 text-sm mt-1">Smart Sync: Percentage targets apply to all months; quantity targets are distributed/summed.</p>
+            </header>
+            <div class="bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
+                <div class="flex items-center gap-4 mb-8 p-4 bg-slate-50 rounded-xl">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] font-black text-slate-400 uppercase">Configuration Year:</span>
+                        <input type="number" id="settings-year-selector" value="2026" class="w-20 font-bold text-blue-600 bg-transparent border-none focus:ring-0">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-12" id="settings-container"></div>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'classone-dashboard';
+
+        const metricsDefinition = [
+            { id: 'lead_vol', label: 'Lead Volume', icon: 'm3 3 3 9-3 9 19-9Z', unit: 'Leads', isRate: false },
+            { id: 'revenue', label: 'Revenue Achievement', icon: 'M12 1v22 M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6', unit: 'RM', isRate: false },
+            { id: 'trial_conv', label: 'Trial Conversion', icon: 'M22 7L13.5 15.5 8.5 10.5 2 17', unit: '%', isRate: true },
+            { id: 'enrollment', label: 'New Enrollments', icon: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 1 0-8 4 4 0 0 1 0 8', unit: 'Students', isRate: false },
+            { id: 'churn', label: 'Student Churn', icon: 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0', unit: 'Students', isRate: false },
+            { id: 'utilization', label: 'Teacher Utilization', icon: 'M22 12h-4l-3 9L9 3l-3 9H2', unit: '%', isRate: true },
+            { id: 'mf_cont', label: 'MF Count', icon: 'M12 12a10 10 0 1 0 0 20 10 10 0 0 0 0-20', unit: 'Partners', isRate: false },
+            { id: 'sop', label: 'SOP Compliance', icon: 'm9 11 3 3L22 4 M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11', unit: '%', isRate: true },
+            { id: 'referral', label: 'Referral Count', icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z', unit: 'Count', isRate: false }
+        ];
+
+        let state = {
+            monthlyActuals: {},
+            monthlyStatus: {},
+            targets: {},
+            user: null,
+            view: 'dashboard'
+        };
+
+        let charts = {
+            performance: null,
+            revenue: null
+        };
+
+        const updateSyncStatus = (text, color) => {
+            document.getElementById('sync-text').innerText = text;
+            const dot = document.getElementById('sync-dot');
+            if (dot) dot.className = `w-2 h-2 rounded-full ${color}`;
+        };
+
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) { console.error("Auth Failed", err); }
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                state.user = user;
+                document.getElementById('user-id-display').innerText = `ID: ${user.uid.substring(0, 8)}`;
+                setupListeners();
+            }
+        });
+
+        const setupListeners = () => {
+            updateSyncStatus('Syncing...', 'bg-yellow-400');
+            
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'metrics'), (snap) => {
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    state.monthlyActuals[doc.id] = d.actual;
+                    state.monthlyStatus[doc.id] = d.status;
+                });
+                refreshUI();
+                updateSyncStatus('Live', 'bg-green-500');
+            }, (err) => updateSyncStatus('Sync Error', 'bg-red-500'));
+
+            onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'targets'), (snap) => {
+                snap.forEach(doc => {
+                    state.targets[doc.id] = doc.data();
+                });
+                refreshUI();
+            });
+        };
+
+        window.refreshUI = () => {
+            const activeEl = document.activeElement;
+            const isInputFocused = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'SELECT');
+            
+            if (state.view === 'dashboard') renderDashboard();
+            if (state.view === 'monthly') renderMatrix();
+            if (state.view === 'yearly') renderComparison();
+            if (state.view === 'settings') {
+                if (!isInputFocused) {
+                    loadSettingsData();
+                }
+            }
+        };
+
+        window.switchView = (v) => {
+            state.view = v;
+            ['dashboard', 'monthly', 'yearly', 'settings'].forEach(id => {
+                const el = document.getElementById(`view-${id}`);
+                const btn = document.getElementById(`btn-${id}`);
+                if (el) el.classList.add('hidden-view');
+                if (btn) btn.classList.remove('nav-active');
+            });
+            const targetView = document.getElementById(`view-${v}`);
+            const targetBtn = document.getElementById(`btn-${v}`);
+            if (targetView) targetView.classList.remove('hidden-view');
+            if (targetBtn) targetBtn.classList.add('nav-active');
+            window.refreshUI();
+        };
+
+        // --- DASHBOARD LOGIC ---
+        const renderDashboard = () => {
+            const year = document.getElementById('dashboard-year-selector').value;
+            const labels = metricsDefinition.map(m => m.label);
+            const targetData = [];
+            const actualData = [];
+
+            let totalRevenue = 0;
+            let totalEnrollment = 0;
+            let convSum = 0;
+            let convCount = 0;
+            let monthlyRevenues = Array(12).fill(0);
+
+            metricsDefinition.forEach(metric => {
+                const targetKey = `${year}-${metric.id}`;
+                const t = state.targets[targetKey] || { annual: 0 };
+                
+                let actuals = [];
+                let validMonths = 0;
+                for(let m=0; m<12; m++) {
+                    const key = `${m}-${year}-${metric.id}`;
+                    const val = state.monthlyActuals[key];
+                    if (val !== undefined) {
+                        actuals.push(parseFloat(val));
+                        validMonths++;
+                        if (metric.id === 'revenue') monthlyRevenues[m] = parseFloat(val);
+                    }
+                }
+
+                const actualVal = metric.isRate ? (validMonths > 0 ? actuals.reduce((a,b)=>a+b,0)/validMonths : 0) : actuals.reduce((a,b)=>a+b,0);
+                const targetVal = parseFloat(t.annual) || 0;
+
+                // For chart normalization (showing % of target met)
+                const percentageOfTarget = targetVal > 0 ? (actualVal / targetVal) * 100 : 0;
+                targetData.push(100); 
+                actualData.push(percentageOfTarget);
+
+                // Summary Stats
+                if (metric.id === 'revenue') totalRevenue = actualVal;
+                if (metric.id === 'enrollment') totalEnrollment = actualVal;
+                if (metric.id === 'trial_conv') { convSum = actualVal; convCount = 1; }
+            });
+
+            // Update Text Summary
+            document.getElementById('summary-revenue').innerText = `RM ${totalRevenue.toLocaleString()}`;
+            document.getElementById('summary-enrollment').innerText = totalEnrollment;
+            document.getElementById('summary-conversion').innerText = `${convSum.toFixed(1)}%`;
+            document.getElementById('summary-efficiency').innerText = (totalRevenue / (totalEnrollment || 1)).toFixed(0);
+
+            // Performance Bar Chart
+            if (charts.performance) charts.performance.destroy();
+            const ctx1 = document.getElementById('performanceChart').getContext('2d');
+            charts.performance = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        { label: 'Target (%)', data: targetData, backgroundColor: '#e2e8f0', borderRadius: 6 },
+                        { label: 'Actual (%)', data: actualData, backgroundColor: '#2563eb', borderRadius: 6 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, max: 150, grid: { display: false } } },
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+
+            // Revenue Line Chart
+            if (charts.revenue) charts.revenue.destroy();
+            const ctx2 = document.getElementById('revenueTrendChart').getContext('2d');
+            charts.revenue = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'Revenue Trend',
+                        data: monthlyRevenues,
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, grid: { borderDash: [5, 5] } } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        };
+
+        // --- TRACKER LOGIC ---
+        const renderMatrix = () => {
+            const m = document.getElementById('month-selector').value;
+            const y = document.getElementById('year-selector').value;
+            const grid = document.getElementById('matrix-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            metricsDefinition.forEach(metric => {
+                const key = `${m}-${y}-${metric.id}`;
+                const targetKey = `${y}-${metric.id}`;
+                const tData = state.targets[targetKey] || { annual: 0, monthly: Array(12).fill(0) };
+                const targetVal = metric.isRate ? (tData.annual || 0) : (tData.monthly[m] || 0);
+                const actual = state.monthlyActuals[key] || '';
+                const status = state.monthlyStatus[key] || 'green';
+
+                const card = document.createElement('div');
+                card.className = "bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between h-56 transition-all hover:border-blue-300";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="p-2.5 rounded-xl bg-slate-50 text-slate-400">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="${metric.icon}"/></svg>
+                        </div>
+                        <div onclick="window.toggleStatus('${key}')" class="w-6 h-6 rounded-full cursor-pointer status-${status}"></div>
+                    </div>
+                    <div>
+                        <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">${metric.label}</h4>
+                        <p class="text-[14px] font-bold text-blue-500 mt-1">Goal: ${targetVal}${metric.unit}</p>
+                    </div>
+                    <div class="mt-2 flex items-center gap-2">
+                        <input type="number" value="${actual}" onchange="window.saveActual('${key}', this.value)" placeholder="Actual..." 
+                               class="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-100">
+                        <span class="text-[9px] font-black text-slate-300 uppercase">${metric.unit}</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        };
+
+        window.toggleStatus = async (key) => {
+            if (!state.user) return;
+            const states = ['green', 'yellow', 'red'];
+            const current = state.monthlyStatus[key] || 'green';
+            const next = states[(states.indexOf(current) + 1) % 3];
+            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'metrics', key), {
+                status: next,
+                actual: state.monthlyActuals[key] || 0
+            }, { merge: true });
+        };
+
+        window.saveActual = async (key, val) => {
+            if (!state.user) return;
+            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'metrics', key), {
+                actual: parseFloat(val) || 0,
+                status: state.monthlyStatus[key] || 'green'
+            }, { merge: true });
+        };
+
+        // --- SETTINGS LOGIC ---
+        const loadSettingsData = () => {
+            const yearInput = document.getElementById('settings-year-selector');
+            if (!yearInput) return;
+            const year = yearInput.value;
+            const container = document.getElementById('settings-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            metricsDefinition.forEach(metric => {
+                const targetKey = `${year}-${metric.id}`;
+                const data = state.targets[targetKey] || { annual: 0, monthly: Array(12).fill(0) };
+                const logicType = metric.isRate ? 'Percentage (%)' : 'Quantity (#)';
+
+                const section = document.createElement('div');
+                section.className = "relative p-6 bg-slate-50/50 rounded-3xl border border-slate-100 group";
+                section.innerHTML = `
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2.5 rounded-xl bg-white shadow-sm text-blue-600">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="${metric.icon}"/></svg>
+                            </div>
+                            <div>
+                                <h3 class="font-black text-sm uppercase text-slate-800 tracking-tight">${metric.label}</h3>
+                                <div class="text-[9px] font-black text-blue-600 uppercase mt-0.5 px-1.5 py-0.5 bg-blue-50 rounded w-fit border border-blue-100">
+                                    ${logicType}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-6">
+                        <div class="flex items-center justify-between bg-blue-600 p-4 rounded-2xl shadow-md">
+                            <span class="text-[10px] font-black text-blue-50 uppercase">Annual Target</span>
+                            <div class="flex items-center gap-2">
+                                <input type="number" value="${data.annual || ''}" onchange="window.handleAnnualInput('${targetKey}', this.value, ${metric.isRate})" 
+                                       class="w-32 bg-blue-500 border-none rounded-lg px-3 py-1.5 text-right font-black text-white focus:ring-2 focus:ring-white/50">
+                                <span class="text-[10px] font-bold text-blue-200">${metric.unit}</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-3">
+                            ${Array.from({length: 12}).map((_, i) => `
+                                <div class="bg-white p-3 rounded-xl border border-slate-100">
+                                    <span class="text-[9px] text-slate-400 font-black uppercase">${new Date(0, i).toLocaleString('en', {month: 'short'})}</span>
+                                    <input type="number" value="${data.monthly[i] || ''}" onchange="window.handleMonthlyInput('${targetKey}', ${i}, this.value, ${metric.isRate})" 
+                                           class="w-full bg-slate-50 border-none rounded-lg px-2 py-1 text-xs font-bold text-slate-800">
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(section);
+            });
+        };
+
+        window.handleAnnualInput = async (targetKey, val, isRate) => {
+            if (!state.user) return;
+            const annual = parseFloat(val) || 0;
+            const monthly = isRate ? Array(12).fill(annual) : Array(12).fill(parseFloat((annual/12).toFixed(1)));
+            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'targets', targetKey), {
+                annual,
+                monthly
+            });
+            loadSettingsData();
+        };
+
+        window.handleMonthlyInput = async (targetKey, index, val, isRate) => {
+            if (!state.user) return;
+            const current = state.targets[targetKey] || { annual: 0, monthly: Array(12).fill(0) };
+            const mVal = parseFloat(val) || 0;
+            let updatedMonthly = [...current.monthly];
+            updatedMonthly[index] = mVal;
+
+            let updatedAnnual = isRate ? mVal : updatedMonthly.reduce((a, b) => a + b, 0);
+            if (isRate) updatedMonthly = Array(12).fill(mVal);
+
+            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'targets', targetKey), {
+                annual: updatedAnnual,
+                monthly: updatedMonthly
+            });
+            loadSettingsData();
+        };
+
+        // --- YEARLY STRATEGY LOGIC ---
+        const renderComparison = () => {
+            const yearEl = document.getElementById('year-selector');
+            if (!yearEl) return;
+            const year = yearEl.value;
+            const tbody = document.getElementById('comparison-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            metricsDefinition.forEach(metric => {
+                const targetKey = `${year}-${metric.id}`;
+                const tData = state.targets[targetKey] || { annual: 0 };
+                
+                let actuals = [];
+                let validCount = 0;
+                for(let m=0; m<12; m++) {
+                    const v = state.monthlyActuals[`${m}-${year}-${metric.id}`];
+                    if (v !== undefined) {
+                        actuals.push(parseFloat(v));
+                        validCount++;
+                    }
+                }
+                
+                const actualVal = metric.isRate ? (validCount > 0 ? actuals.reduce((a,b)=>a+b,0)/validCount : 0) : actuals.reduce((a,b)=>a+b,0);
+                const targetVal = parseFloat(tData.annual) || 0;
+                const pace = targetVal > 0 ? ((actualVal/targetVal)*100).toFixed(1) : 0;
+
+                const row = document.createElement('tr');
+                row.className = "hover:bg-slate-50";
+                row.innerHTML = `
+                    <td class="px-6 py-5 flex items-center gap-2">
+                        <div class="p-1.5 rounded-lg bg-slate-100 text-slate-500">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="${metric.icon}"/></svg>
+                        </div>
+                        <span class="text-xs font-black uppercase text-slate-700 tracking-tighter">${metric.label}</span>
+                    </td>
+                    <td class="px-6 py-5 text-xs font-bold text-slate-900">${targetVal.toLocaleString()}${metric.unit}</td>
+                    <td class="px-6 py-5">
+                        <div class="text-xs font-black text-blue-600">${actualVal.toFixed(1)}${metric.unit}</div>
+                        <div class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">${metric.isRate ? 'Avg YTD' : 'Sum YTD'}</div>
+                    </td>
+                    <td class="px-6 py-5">
+                        <span class="text-xs font-black ${pace >= 100 ? 'text-green-600' : 'text-red-600'}">${pace}%</span>
+                        <div class="w-16 h-1 bg-slate-100 rounded-full mt-1 overflow-hidden">
+                            <div class="h-full bg-blue-600" style="width: ${Math.min(pace, 100)}%"></div>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        };
+
+        window.generateAIStrategy = () => {
+            const content = document.getElementById('ai-content');
+            if (!content) return;
+            content.innerHTML = `<div class="animate-pulse">Connecting to live performance node...</div>`;
+            setTimeout(() => {
+                content.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="p-4 bg-slate-800 rounded-xl border-l-2 border-green-500">
+                            <p class="text-green-400 font-black text-[10px] uppercase mb-1">Live Efficiency</p>
+                            <p class="text-slate-300">Rate consistency verified. Percentage metrics are syncing across all months correctly. Current Teacher Utilization suggests capacity for 15% more students.</p>
+                        </div>
+                        <div class="p-4 bg-slate-800 rounded-xl border-l-2 border-indigo-500">
+                            <p class="text-indigo-400 font-black text-[10px] uppercase mb-1">Scaling Alert</p>
+                            <p class="text-slate-300">Sum-based Revenue target is RM ${state.targets['2026-revenue']?.annual || '0'}. Focus on lead quality to maintain the 1:4 trial conversion rate.</p>
+                        </div>
+                    </div>
+                `;
+            }, 800);
+        };
+
+        document.getElementById('month-selector').onchange = renderMatrix;
+        document.getElementById('year-selector').onchange = renderMatrix;
+        document.getElementById('settings-year-selector').onchange = loadSettingsData;
+
+        initAuth();
     </script>
 </body>
 </html>
