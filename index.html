@@ -147,22 +147,33 @@
         
         let charts = { performance: null, revenue: null };
 
+        // Restored full set of 9 metrics
         const metricsDefinition = [
-            { id: 'lead_vol', label: 'Lead Volume', icon: 'm3 3 3 9-3 9 19-9Z', unit: '', isRate: false },
+            { id: 'leads', label: 'Lead Volume', icon: 'M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z', unit: '', isRate: false },
+            { id: 'conversion', label: 'Trial Conv', icon: 'M22 7L13.5 15.5 8.5 10.5 2 17', unit: '%', isRate: true },
+            { id: 'enrollment', label: 'New Students', icon: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 1 0-8 4 4 0 0 1 0 8', unit: '', isRate: false },
             { id: 'revenue', label: 'Revenue', icon: 'M12 1v22 M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6', unit: 'RM', isRate: false },
-            { id: 'trial_conv', label: 'Trial Conv', icon: 'M22 7L13.5 15.5 8.5 10.5 2 17', unit: '%', isRate: true },
-            { id: 'enrollment', label: 'New Students', icon: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 1 0-8 4 4 0 0 1 0 8', unit: '', isRate: false },
-            { id: 'churn', label: 'Churn', icon: 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0', unit: '', isRate: false },
-            { id: 'utilization', label: 'Teacher Util', icon: 'M22 12h-4l-3 9L9 3l-3 9H2', unit: '%', isRate: true }
+            { id: 'mf_growth', label: 'MF Growth', icon: 'M12 2L2 7l10 5 10-5-10-5z M2 17l10 5 10-5 M2 12l10 5 10-5', unit: 'RM', isRate: false },
+            { id: 'utilization', label: 'Teacher Util', icon: 'M22 12h-4l-3 9L9 3l-3 9H2', unit: '%', isRate: true },
+            { id: 'churn', label: 'Churn', icon: 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0 M9 12h6', unit: '', isRate: false },
+            { id: 'compliance', label: 'SOP Compliance', icon: 'M9 11l3 3L22 4 M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11', unit: '%', isRate: true },
+            { id: 'referrals', label: 'Referrals', icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z', unit: '', isRate: false }
         ];
 
         // STARTUP LOGIC - Purely synchronous and local
         function initDashboard() {
             metricsDefinition.forEach(m => {
                 const targetKey = `2026-${m.id}`;
+                // Default targets based on the specific metric type
+                let defaultVal = 100;
+                if(m.id === 'revenue') defaultVal = 73000;
+                if(m.id === 'enrollment') defaultVal = 18;
+                if(m.id === 'conversion') defaultVal = 40;
+                if(m.id === 'leads') defaultVal = 450;
+                
                 state.targets[targetKey] = {
-                    annual: m.isRate ? 80 : 1200,
-                    monthly: Array(12).fill(m.isRate ? 80 : 100)
+                    annual: m.isRate ? defaultVal : defaultVal * 12,
+                    monthly: Array(12).fill(defaultVal)
                 };
             });
             // Immediately render the first view
@@ -222,7 +233,7 @@
 
                 if(m.id === 'revenue') totalRevenue = actualVal;
                 if(m.id === 'enrollment') totalEnrollment = actualVal;
-                if(m.id === 'trial_conv') convSum = actualVal;
+                if(m.id === 'conversion') convSum = actualVal;
             });
 
             document.getElementById('summary-revenue').innerText = `RM ${totalRevenue.toLocaleString()}`;
